@@ -613,17 +613,24 @@
     });
 
     const canvas = document.getElementById('menuCanvas');
-    const W = 1080, PADDING = 60;
-    const CAT_HEADER = 52, ITEM_H = 48, CAT_GAP = 28, BOTTOM_PAD = 80;
-    const HEADER_H = 220, FOOTER_H = 90;
+    const W = 1080;
+    const PAD = 70;           // side padding
+    const HEADER_H = 260;     // logo + brand + tagline + divider
+    const CAT_LABEL_H = 70;   // height for each category label block
+    const ITEM_H = 56;        // height per item row
+    const CAT_BOTTOM_GAP = 24;// gap after last item in a category
+    const FOOTER_H = 150;     // footer area height
+    const TOP_PAD = 30;
 
-    // Calculate height
+    // Calculate total height precisely
     let contentH = 0;
-    Object.keys(categories).forEach(cat => {
-      contentH += CAT_HEADER + CAT_GAP;
-      contentH += categories[cat].length * ITEM_H + 20;
+    const catKeys = Object.keys(categories);
+    catKeys.forEach(cat => {
+      contentH += CAT_LABEL_H;
+      contentH += categories[cat].length * ITEM_H;
+      contentH += CAT_BOTTOM_GAP;
     });
-    const H = HEADER_H + contentH + FOOTER_H + BOTTOM_PAD;
+    const H = TOP_PAD + HEADER_H + contentH + FOOTER_H;
 
     canvas.width = W;
     canvas.height = H;
@@ -667,130 +674,191 @@
     // Load logo image
     const logoImg = new Image();
     logoImg.crossOrigin = 'anonymous';
-    logoImg.src = window.location.origin + '/../images/logo.jpg';
+    logoImg.src = '../images/logo.jpg';
 
-    const drawText = () => {
+    const drawAll = () => {
+      ctx.clearRect(0, 0, W, H);
+
+      // ---- BACKGROUND ----
+      const bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0,   '#1a0f08');
+      bg.addColorStop(0.5, '#2e1e12');
+      bg.addColorStop(1,   '#1a0f08');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+
+      // Gold border top/bottom
+      ctx.fillStyle = '#c9a84c';
+      ctx.fillRect(0, 0, W, 6);
+      ctx.fillRect(0, H - 6, W, 6);
+
+      // Corner accents
+      const corner = (x, y, sx, sy) => {
+        ctx.strokeStyle = 'rgba(201,168,76,0.45)';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + sx*80, y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + sy*80); ctx.stroke();
+      };
+      corner(22, 22, 1, 1); corner(W-22, 22, -1, 1);
+      corner(22, H-22, 1, -1); corner(W-22, H-22, -1, -1);
+
+      // ---- HEADER: Logo circle ----
+      const logoY = TOP_PAD + 68;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(W/2, logoY, 60, 0, Math.PI*2);
+      ctx.strokeStyle = '#c9a84c';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      // Try clip & draw logo (already loaded)
+      ctx.beginPath();
+      ctx.arc(W/2, logoY, 57, 0, Math.PI*2);
+      ctx.clip();
+      try { ctx.drawImage(logoImg, W/2-57, logoY-57, 114, 114); } catch(e) {}
+      ctx.restore();
+
       // Brand name
       ctx.fillStyle = '#c9a84c';
-      ctx.font = 'bold 62px Georgia, serif';
+      ctx.font = 'bold 68px Georgia, serif';
       ctx.textAlign = 'center';
-      ctx.fillText('Beauty by Zee', W/2, 170);
+      ctx.fillText('Beauty by Zee', W/2, TOP_PAD + 170);
 
-      // Tagline
-      ctx.fillStyle = 'rgba(255,255,255,0.55)';
-      ctx.font = '28px Georgia, serif';
-      ctx.letterSpacing = '4px';
-      ctx.fillText('PRODUCT MENU & PRICE LIST', W/2, 205);
+      // Subtitle bar
+      const subY = TOP_PAD + 200;
+      ctx.fillStyle = 'rgba(201,168,76,0.12)';
+      ctx.fillRect(PAD, subY - 24, W - PAD*2, 36);
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.font = '500 24px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('PRODUCT MENU & PRICE LIST', W/2, subY);
 
-      // Gold divider line
-      ctx.strokeStyle = 'rgba(201,168,76,0.4)';
-      ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(PADDING, 220); ctx.lineTo(W - PADDING, 220); ctx.stroke();
+      // Divider below header
+      const divY = TOP_PAD + HEADER_H - 10;
+      const grad = ctx.createLinearGradient(PAD, 0, W-PAD, 0);
+      grad.addColorStop(0, 'transparent');
+      grad.addColorStop(0.5, '#c9a84c');
+      grad.addColorStop(1, 'transparent');
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(PAD, divY); ctx.lineTo(W-PAD, divY); ctx.stroke();
 
       // ---- CATEGORIES & ITEMS ----
-      let y = HEADER_H + 20;
-      const catKeys = Object.keys(categories);
+      let y = TOP_PAD + HEADER_H + 10;
 
       catKeys.forEach((cat, ci) => {
-        // Category header background pill
-        const pillW = 320, pillH = 38, pillX = (W - pillW) / 2;
-        ctx.fillStyle = 'rgba(201,168,76,0.18)';
-        roundRect(ctx, pillX, y - 28, pillW, pillH, 19);
-        ctx.fill();
+        // Category label row
+        const labelY = y + 44;
+        // Category background strip
+        ctx.fillStyle = 'rgba(201,168,76,0.14)';
+        ctx.fillRect(PAD, y + 8, W - PAD*2, 46);
+        // Category left accent line
+        ctx.fillStyle = '#c9a84c';
+        ctx.fillRect(PAD, y + 8, 4, 46);
 
         ctx.fillStyle = '#e8c97a';
-        ctx.font = 'bold 26px Georgia, serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(cat.toUpperCase(), W/2, y);
-        y += CAT_GAP + 10;
+        ctx.font = 'bold 28px Georgia, serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(cat.toUpperCase(), PAD + 20, labelY);
+        y += CAT_LABEL_H;
 
         // Items
         categories[cat].forEach((item, ii) => {
-          // Alternating row tint
+          const rowY = y;
+          const textY = rowY + 36;
+
+          // Alternating row
           if (ii % 2 === 0) {
-            ctx.fillStyle = 'rgba(255,255,255,0.04)';
-            ctx.fillRect(PADDING, y - 30, W - PADDING*2, ITEM_H - 4);
+            ctx.fillStyle = 'rgba(255,255,255,0.03)';
+            ctx.fillRect(PAD, rowY, W - PAD*2, ITEM_H);
           }
-          // Dot leader
-          ctx.fillStyle = 'rgba(201,168,76,0.3)';
-          ctx.font = '20px monospace';
-          ctx.textAlign = 'center';
-          const dots = '·'.repeat(38);
-          ctx.fillText(dots, W/2, y);
 
           // Item name
-          ctx.fillStyle = 'rgba(255,255,255,0.9)';
-          ctx.font = '28px Georgia, serif';
+          ctx.fillStyle = 'rgba(255,255,255,0.88)';
+          ctx.font = '30px Georgia, serif';
           ctx.textAlign = 'left';
-          ctx.fillText(item.name, PADDING + 10, y);
+          ctx.fillText(item.name, PAD + 20, textY);
 
           // Price
-          const priceStr = item.price > 0 ? '₦' + Number(item.price).toLocaleString() : 'On Request';
-          ctx.fillStyle = item.price > 0 ? '#e8c97a' : 'rgba(255,255,255,0.4)';
-          ctx.font = item.price > 0 ? 'bold 28px Georgia, serif' : '24px Georgia, serif';
+          const priceStr = item.price > 0 ? 'N' + Number(item.price).toLocaleString() : 'On Request';
+          ctx.fillStyle = item.price > 0 ? '#e8c97a' : 'rgba(255,255,255,0.35)';
+          ctx.font = item.price > 0 ? 'bold 30px Georgia, serif' : '26px Georgia, serif';
           ctx.textAlign = 'right';
-          ctx.fillText(priceStr, W - PADDING - 10, y);
+          ctx.fillText(priceStr, W - PAD - 20, textY);
+
+          // Dot leader between name and price
+          const nameW = ctx.measureText(item.name).width;
+          const priceW = ctx.measureText(priceStr).width;
+          const dotStart = PAD + 20 + nameW + 16;
+          const dotEnd   = W - PAD - 20 - priceW - 16;
+          if (dotEnd > dotStart + 20) {
+            ctx.fillStyle = 'rgba(201,168,76,0.25)';
+            ctx.font = '18px monospace';
+            ctx.textAlign = 'left';
+            const dotStr = '. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .';
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(dotStart, rowY, dotEnd - dotStart, ITEM_H);
+            ctx.clip();
+            ctx.fillText(dotStr, dotStart, textY);
+            ctx.restore();
+          }
+
+          // Bottom border on each item
+          ctx.strokeStyle = 'rgba(201,168,76,0.08)';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([]);
+          ctx.beginPath();
+          ctx.moveTo(PAD + 20, rowY + ITEM_H);
+          ctx.lineTo(W - PAD - 20, rowY + ITEM_H);
+          ctx.stroke();
 
           y += ITEM_H;
         });
 
-        // Divider between categories
-        if (ci < catKeys.length - 1) {
-          y += 10;
-          ctx.strokeStyle = 'rgba(201,168,76,0.2)';
-          ctx.lineWidth = 1;
-          ctx.setLineDash([6, 6]);
-          ctx.beginPath(); ctx.moveTo(PADDING, y); ctx.lineTo(W - PADDING, y); ctx.stroke();
-          ctx.setLineDash([]);
-          y += 20;
-        }
+        y += CAT_BOTTOM_GAP;
       });
 
       // ---- FOOTER ----
-      y = H - FOOTER_H + 10;
-      ctx.strokeStyle = 'rgba(201,168,76,0.4)';
-      ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(PADDING, y); ctx.lineTo(W - PADDING, y); ctx.stroke();
-      y += 36;
+      const footerTop = H - FOOTER_H + 10;
 
-      ctx.fillStyle = 'rgba(255,255,255,0.5)';
-      ctx.font = '24px Georgia, serif';
+      // Footer divider
+      const fgrad = ctx.createLinearGradient(PAD, 0, W-PAD, 0);
+      fgrad.addColorStop(0, 'transparent');
+      fgrad.addColorStop(0.5, 'rgba(201,168,76,0.5)');
+      fgrad.addColorStop(1, 'transparent');
+      ctx.strokeStyle = fgrad;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(PAD, footerTop); ctx.lineTo(W-PAD, footerTop); ctx.stroke();
+
+      // WhatsApp line
+      ctx.fillStyle = 'rgba(255,255,255,0.65)';
+      ctx.font = '26px Georgia, serif';
       ctx.textAlign = 'center';
-      ctx.fillText('📱 Order via WhatsApp: +234 806 702 3509', W/2, y);
-      y += 34;
-      ctx.fillStyle = 'rgba(201,168,76,0.6)';
+      ctx.fillText('Order via WhatsApp: +234 806 702 3509', W/2, footerTop + 44);
+
+      // Delivery line
+      ctx.fillStyle = 'rgba(201,168,76,0.75)';
       ctx.font = '22px Georgia, serif';
-      ctx.fillText('Free delivery within Kano State  ·  Nationwide & International delivery available', W/2, y);
+      ctx.fillText('Free delivery within Kano State  |  Nationwide & International delivery available', W/2, footerTop + 82);
+
+      // Instagram
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.font = '20px Georgia, serif';
+      ctx.fillText('@skincare_products_by_zee', W/2, footerTop + 118);
 
       // Show download
-      const wrap = document.getElementById('menuPreviewWrap');
-      wrap.style.display = 'block';
+      document.getElementById('menuPreviewWrap').style.display = 'block';
       const dlBtn = document.getElementById('downloadMenuBtn');
       dlBtn.style.display = 'inline-block';
       dlBtn.href = canvas.toDataURL('image/png');
       dlBtn.download = 'beauty-by-zee-menu.png';
-      showMsg(true, 'Menu generated! Download or tap & hold on mobile to save.');
+      showMsg(true, 'Menu generated! Click Download Image to save.');
     };
 
-    logoImg.onload = () => {
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(W/2, 85, 52, 0, Math.PI * 2);
-      ctx.clip();
-      ctx.drawImage(logoImg, W/2 - 52, 85 - 52, 104, 104);
-      ctx.restore();
-      drawText();
-    };
-    logoImg.onerror = () => {
-      // Draw text fallback for logo
-      ctx.fillStyle = '#c9a84c';
-      ctx.font = 'bold 36px Georgia, serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('BBZ', W/2, 95);
-      drawText();
-    };
+    logoImg.onload = () => drawAll();
+    logoImg.onerror = () => drawAll();
     // Trigger immediately in case image is cached
-    if (logoImg.complete) logoImg.onload();
+    if (logoImg.complete) drawAll();
   }
 
   function roundRect(ctx, x, y, w, h, r) {
