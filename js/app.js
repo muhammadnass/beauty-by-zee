@@ -9,8 +9,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       SupabaseManager.loadPrices(),
       SupabaseManager.loadCustomProducts()
     ]);
-    // Merge default + custom products
-    const allProducts = [...DEFAULT_PRODUCTS, ...customProducts];
+    // Load deleted defaults list
+    let deletedDefaults = [];
+    try { deletedDefaults = JSON.parse(localStorage.getItem('bbz_deleted_defaults') || '[]'); } catch {}
+
+    // Overrides: custom products with _overridesDefault replace the default
+    const overrideIds = new Set(customProducts.filter(p => p._overridesDefault).map(p => p.id));
+
+    // Filter defaults: skip deleted and overridden ones
+    const defaults = DEFAULT_PRODUCTS.filter(p => !deletedDefaults.includes(p.id) && !overrideIds.has(p.id));
+    const allProducts = [...defaults, ...customProducts];
+
     products = allProducts.map(p => ({
       ...p,
       price: prices[p.id] !== undefined ? parseFloat(prices[p.id]) : (p.price || 0)
