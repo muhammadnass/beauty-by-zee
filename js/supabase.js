@@ -1,80 +1,72 @@
-// ===== Beauty by Zee — Supabase Price Manager =====
-//
-// SETUP INSTRUCTIONS:
-// 1. Go to https://supabase.com and create a free account
-// 2. Create a new project (free tier is enough)
-// 3. In the SQL Editor, run this to create the prices table:
-//
-//    CREATE TABLE prices (
-//      id INTEGER PRIMARY KEY,
-//      price NUMERIC DEFAULT 0,
-//      updated_at TIMESTAMPTZ DEFAULT NOW()
-//    );
-//    ALTER TABLE prices ENABLE ROW LEVEL SECURITY;
-//    CREATE POLICY "Public read" ON prices FOR SELECT USING (true);
-//    CREATE POLICY "Admin write" ON prices FOR ALL USING (true);
-//
-// 4. Go to Project Settings → API and copy your URL and anon key below
-//
+// ===== Beauty by Zee — Price Sync via JSONBin.io =====
+// Free alternative to Supabase — no project limits
+// Setup: https://jsonbin.io → Sign up free → Create Bin → paste IDs below
 
-const SUPABASE_URL = '';    // e.g. 'https://xxxx.supabase.co'
-const SUPABASE_KEY = '';    // your anon/public key
+const JSONBIN_BIN_ID  = '';   // e.g. '6748abc123def456789'
+const JSONBIN_API_KEY = '';   // e.g. '$2a$10$...'
 
-// ---- Internal ----
-let _client = null;
-
-function getClient() {
-  if (!SUPABASE_URL || !SUPABASE_KEY) return null;
-  if (_client) return _client;
-  // Load Supabase JS from CDN if not already loaded
-  return _client;
-}
+// =====================================================
 
 const SupabaseManager = {
+
   isConfigured() {
-    return !!(SUPABASE_URL && SUPABASE_KEY);
+    return JSONBIN_BIN_ID.trim() !== '' && JSONBIN_API_KEY.trim() !== '';
   },
 
   async loadPrices() {
-    if (!this.isConfigured()) {
-      // Fallback to localStorage
-      return JSON.parse(localStorage.getItem('bbz_prices') || '{}');
+    // Try JSONBin first if configured
+    if (this.isConfigured()) {
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+          headers: {
+            'X-Master-Key': JSONBIN_API_KEY,
+            'X-Bin-Meta': 'false'
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          // Cache locally as fallback
+          try { localStorage.setItem('bbz_prices', JSON.stringify(data)); } catch {}
+          return data;
+        }
+      } catch (e) {
+        console.warn('JSONBin fetch failed, using local cache', e);
+      }
     }
+
+    // Fallback to localStorage
     try {
-      const { createClient } = window.supabase;
-      const client = createClient(SUPABASE_URL, SUPABASE_KEY);
-      const { data, error } = await client.from('prices').select('id, price');
-      if (error) throw error;
-      const prices = {};
-      data.forEach(row => { prices[row.id] = row.price; });
-      // Also cache locally as fallback
-      localStorage.setItem('bbz_prices', JSON.stringify(prices));
-      return prices;
-    } catch (err) {
-      console.warn('Supabase unavailable, using local cache:', err.message);
-      return JSON.parse(localStorage.getItem('bbz_prices') || '{}');
-    }
+      const local = localStorage.getItem('bbz_prices');
+      if (local) return JSON.parse(local);
+    } catch {}
+    return {};
   },
 
   async savePrices(pricesObj) {
-    // Always save to localStorage as fallback
-    localStorage.setItem('bbz_prices', JSON.stringify(pricesObj));
+    // Always save to localStorage
+    try { localStorage.setItem('bbz_prices', JSON.stringify(pricesObj)); } catch {}
 
-    if (!this.isConfigured()) return { ok: false, msg: 'Supabase not configured — saved locally only.' };
+    if (!this.isConfigured()) {
+      return { ok: true, msg: 'Prices saved locally. Set up JSONBin for global sync.' };
+    }
 
     try {
-      const { createClient } = window.supabase;
-      const client = createClient(SUPABASE_URL, SUPABASE_KEY);
-      const rows = Object.entries(pricesObj).map(([id, price]) => ({
-        id: parseInt(id), price: parseFloat(price) || 0, updated_at: new Date().toISOString()
-      }));
-      const { error } = await client.from('prices').upsert(rows, { onConflict: 'id' });
-      if (error) throw error;
-      return { ok: true, msg: 'Prices saved to Supabase — visible to all customers!' };
-    } catch (err) {
-      return { ok: false, msg: `Saved locally (Supabase error: ${err.message})` };
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': JSONBIN_API_KEY
+        },
+        body: JSON.stringify(pricesObj)
+      });
+
+      if (res.ok) {
+        return { ok: true, msg: 'Prices saved and synced to all customers! ✅' };
+      } else {
+        return { ok: false, msg: 'Cloud sync failed — prices saved locally only.' };
+      }
+    } catch (e) {
+      return { ok: false, msg: 'Network error — prices saved locally only.' };
     }
   }
 };
-
-if (typeof module !== 'undefined') module.exports = SupabaseManager;
