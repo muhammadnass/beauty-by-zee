@@ -1,5 +1,8 @@
 // Beauty by Zee - Product Data
-// Prices are managed by admin via admin portal (stored in localStorage)
+// Images served via Cloudinary CDN (auto format, auto quality, 600px wide)
+// Prices are managed by admin via admin portal
+
+const CDN = 'https://res.cloudinary.com/mtlh9cyx/image/upload/f_auto,q_auto,w_600/beauty-by-zee';
 
 const DEFAULT_PRODUCTS = [
   {
@@ -7,7 +10,7 @@ const DEFAULT_PRODUCTS = [
     name: "Face Wash",
     description: "Deep Cleansing · Refreshing · Glow Boosting. For All Skin Types.",
     category: "Face Care",
-    image: "images/face-wash.jpg",
+    image: `${CDN}/face-wash`,
     defaultPrice: 0,
     badge: "Bestseller"
   },
@@ -16,7 +19,7 @@ const DEFAULT_PRODUCTS = [
     name: "Face Cream",
     description: "Hydration · Brightening · Nourishing. For All Skin Types.",
     category: "Face Care",
-    image: "images/face-cream.jpg",
+    image: `${CDN}/face-cream`,
     defaultPrice: 0,
     badge: "New"
   },
@@ -25,7 +28,7 @@ const DEFAULT_PRODUCTS = [
     name: "Super Glow Soap",
     description: "Brightening · Even Tone · Radiance. Smooth · Radiant · Renewed.",
     category: "Body Care",
-    image: "images/super-glow-soap.jpg",
+    image: `${CDN}/super-glow-soap`,
     defaultPrice: 0,
     badge: null
   },
@@ -34,7 +37,7 @@ const DEFAULT_PRODUCTS = [
     name: "Glow Body Scrub",
     description: "Brightening & Exfoliating. Smooth · Radiant · Renewed. For All Skin Types.",
     category: "Body Care",
-    image: "images/glow-body-scrub.jpg",
+    image: `${CDN}/glow-body-scrub`,
     defaultPrice: 0,
     badge: "Popular"
   },
@@ -43,7 +46,7 @@ const DEFAULT_PRODUCTS = [
     name: "Super Glow Oil",
     description: "Radiance · Nourishment · Even Tone. A Few Drops. A Natural Glow. For All Skin Types.",
     category: "Body Care",
-    image: "images/super-glow-oil-1.jpg",
+    image: `${CDN}/super-glow-oil-1`,
     defaultPrice: 0,
     badge: "Bestseller"
   },
@@ -52,7 +55,7 @@ const DEFAULT_PRODUCTS = [
     name: "Qasli Powder",
     description: "100% Natural Moroccan Ritual. Glow & Detoxify. Skin Detoxifier & Brightener. For All Skin Types.",
     category: "Natural Rituals",
-    image: "images/qasli-powder-1.jpg",
+    image: `${CDN}/qasli-powder-1`,
     defaultPrice: 0,
     badge: "Natural"
   },
@@ -61,7 +64,7 @@ const DEFAULT_PRODUCTS = [
     name: "Nila Mask",
     description: "Lighten. Brighten. Glow. For Hyperpigmentation — Safe & Side-Effect Free. Natural · Pure · Effective.",
     category: "Face Care",
-    image: "images/nila-mask-1.jpg",
+    image: `${CDN}/nila-mask-1`,
     defaultPrice: 0,
     badge: "Trending"
   },
@@ -70,7 +73,7 @@ const DEFAULT_PRODUCTS = [
     name: "Beauty By Zee Body Cream",
     description: "Soft, Silky, Radiant Skin. Luxurious daily moisturiser for glowing skin.",
     category: "Body Care",
-    image: "images/body-cream.jpg",
+    image: `${CDN}/body-cream`,
     defaultPrice: 0,
     badge: null
   },
@@ -79,7 +82,7 @@ const DEFAULT_PRODUCTS = [
     name: "Glow Cream (500ml)",
     description: "Intense Moisture. Radiant Glow. Available in 500ml jar.",
     category: "Body Care",
-    image: "images/glow-cream.jpg",
+    image: `${CDN}/glow-cream`,
     defaultPrice: 0,
     badge: null
   },
@@ -88,7 +91,7 @@ const DEFAULT_PRODUCTS = [
     name: "Glow Cream (1KG)",
     description: "Intense Moisture. Radiant Glow. Family-size 1KG jar — best value.",
     category: "Body Care",
-    image: "images/glow-cream-2.jpg",
+    image: `${CDN}/glow-cream-2`,
     defaultPrice: 0,
     badge: "Best Value"
   },
@@ -97,7 +100,7 @@ const DEFAULT_PRODUCTS = [
     name: "Moroccan Black Soap",
     description: "100% Natural. No Added Chemicals. Deep Cleans & Glow. Natural · Pure · Traditional.",
     category: "Natural Rituals",
-    image: "images/moroccan-black-soap-1.jpg",
+    image: `${CDN}/moroccan-black-soap-1`,
     defaultPrice: 0,
     badge: "Natural"
   },
@@ -106,7 +109,7 @@ const DEFAULT_PRODUCTS = [
     name: "Extreme Glowing Oil",
     description: "The Perfect Combo. Radiant, Even-Toned Skin.",
     category: "Body Care",
-    image: "images/extreme-glowing-oil.jpg",
+    image: `${CDN}/extreme-glowing-oil`,
     defaultPrice: 0,
     badge: null
   },
@@ -115,7 +118,7 @@ const DEFAULT_PRODUCTS = [
     name: "Caramel Body Lotion",
     description: "The Perfect Combo with Extreme Glowing Oil. Radiant, Even-Toned Skin.",
     category: "Body Care",
-    image: "images/extreme-glowing-oil.jpg",
+    image: `${CDN}/product-collection-1`,
     defaultPrice: 0,
     badge: null
   },
@@ -124,7 +127,7 @@ const DEFAULT_PRODUCTS = [
     name: "Glow Soap & Body Scrub Set",
     description: "Nourish. Exfoliate. Radiate. Super Glow Soap + Glow Body Scrub combo.",
     category: "Sets & Combos",
-    image: "images/glow-soap-scrub.jpg",
+    image: `${CDN}/glow-soap-scrub`,
     defaultPrice: 0,
     badge: "Combo Deal"
   }
