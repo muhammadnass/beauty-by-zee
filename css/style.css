@@ -616,6 +616,33 @@ nav a:hover { background: rgba(201,168,76,0.2); color: var(--gold); }
 
 .whatsapp-btn:hover { background: #20bd5a; transform: translateY(-1px); }
 
+.card-btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 25px;
+  border: 2px solid var(--gold-dark);
+  background: transparent;
+  color: var(--gold-dark);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  margin-top: 0.6rem;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.card-btn:hover { background: rgba(201,168,76,0.08); }
+
+.delivery-info {
+  background: rgba(201,168,76,0.1);
+  border-left: 3px solid var(--gold-dark);
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.82rem;
+  color: var(--brown);
+  margin-bottom: 0.8rem;
+  line-height: 1.5;
+}
+
 /* ===== TOAST ===== */
 .toast {
   position: fixed;

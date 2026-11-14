@@ -160,6 +160,7 @@
     <div class="admin-tabs">
       <button class="admin-tab active" data-tab="manage">🛍 All Products</button>
       <button class="admin-tab" data-tab="add">➕ Add Product</button>
+      <button class="admin-tab" data-tab="menu">🖼 Menu Generator</button>
     </div>
 
     <!-- ===== TAB: ALL PRODUCTS ===== -->
@@ -222,6 +223,22 @@
         <button class="btn-add-product" id="addProductBtn">➕ Add Product to Store</button>
       </div>
     </div>
+
+    <!-- ===== TAB: MENU GENERATOR ===== -->
+    <div class="tab-panel" id="tab-menu">
+      <div class="admin-subtitle" style="margin-bottom:1rem">
+        Generate a branded menu image with current prices — ready to post on WhatsApp Status or Instagram.
+      </div>
+      <div style="display:flex;gap:0.8rem;flex-wrap:wrap;margin-bottom:1.2rem;align-items:center">
+        <button class="save-btn" id="generateMenuBtn" style="margin:0">🎨 Generate Menu Image</button>
+        <a id="downloadMenuBtn" style="display:none;padding:0.6rem 1.2rem;border-radius:25px;background:linear-gradient(135deg,#2ecc71,#27ae60);color:#fff;font-weight:700;font-size:0.88rem;text-decoration:none;cursor:pointer">⬇️ Download Image</a>
+      </div>
+      <div id="menuPreviewWrap" style="display:none;max-width:480px">
+        <p style="font-size:0.82rem;color:var(--text-light);margin-bottom:0.6rem">Preview — tap & hold on mobile to save, or click Download:</p>
+        <canvas id="menuCanvas" style="width:100%;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15)"></canvas>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -579,6 +596,216 @@
   }
 
   init();
+
+  // ===== MENU GENERATOR =====
+  document.getElementById('generateMenuBtn').addEventListener('click', generateMenu);
+
+  function generateMenu() {
+    const products = allProducts();
+    const prices = savedPrices;
+
+    // Group by category
+    const categories = {};
+    products.forEach(p => {
+      const price = prices[p.id] !== undefined ? prices[p.id] : (p.price || 0);
+      if (!categories[p.category]) categories[p.category] = [];
+      categories[p.category].push({ name: p.name, price });
+    });
+
+    const canvas = document.getElementById('menuCanvas');
+    const W = 1080, PADDING = 60;
+    const CAT_HEADER = 52, ITEM_H = 48, CAT_GAP = 28, BOTTOM_PAD = 80;
+    const HEADER_H = 220, FOOTER_H = 90;
+
+    // Calculate height
+    let contentH = 0;
+    Object.keys(categories).forEach(cat => {
+      contentH += CAT_HEADER + CAT_GAP;
+      contentH += categories[cat].length * ITEM_H + 20;
+    });
+    const H = HEADER_H + contentH + FOOTER_H + BOTTOM_PAD;
+
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    // Background gradient
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#1a0f08');
+    bg.addColorStop(0.4, '#3d2b1f');
+    bg.addColorStop(1, '#1a0f08');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Top gold border
+    ctx.fillStyle = '#c9a84c';
+    ctx.fillRect(0, 0, W, 5);
+    ctx.fillRect(0, H - 5, W, 5);
+
+    // Decorative gold corner lines
+    const drawCorner = (x, y, dx, dy) => {
+      ctx.strokeStyle = 'rgba(201,168,76,0.5)';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + dx * 60, y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + dy * 60); ctx.stroke();
+    };
+    drawCorner(20, 20, 1, 1); drawCorner(W-20, 20, -1, 1);
+    drawCorner(20, H-20, 1, -1); drawCorner(W-20, H-20, -1, -1);
+
+    // ---- HEADER ----
+    // Logo circle placeholder
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(W/2, 85, 55, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(201,168,76,0.15)';
+    ctx.fill();
+    ctx.strokeStyle = '#c9a84c';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.restore();
+
+    // Load logo image
+    const logoImg = new Image();
+    logoImg.crossOrigin = 'anonymous';
+    logoImg.src = window.location.origin + '/../images/logo.jpg';
+
+    const drawText = () => {
+      // Brand name
+      ctx.fillStyle = '#c9a84c';
+      ctx.font = 'bold 62px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Beauty by Zee', W/2, 170);
+
+      // Tagline
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.font = '28px Georgia, serif';
+      ctx.letterSpacing = '4px';
+      ctx.fillText('PRODUCT MENU & PRICE LIST', W/2, 205);
+
+      // Gold divider line
+      ctx.strokeStyle = 'rgba(201,168,76,0.4)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(PADDING, 220); ctx.lineTo(W - PADDING, 220); ctx.stroke();
+
+      // ---- CATEGORIES & ITEMS ----
+      let y = HEADER_H + 20;
+      const catKeys = Object.keys(categories);
+
+      catKeys.forEach((cat, ci) => {
+        // Category header background pill
+        const pillW = 320, pillH = 38, pillX = (W - pillW) / 2;
+        ctx.fillStyle = 'rgba(201,168,76,0.18)';
+        roundRect(ctx, pillX, y - 28, pillW, pillH, 19);
+        ctx.fill();
+
+        ctx.fillStyle = '#e8c97a';
+        ctx.font = 'bold 26px Georgia, serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(cat.toUpperCase(), W/2, y);
+        y += CAT_GAP + 10;
+
+        // Items
+        categories[cat].forEach((item, ii) => {
+          // Alternating row tint
+          if (ii % 2 === 0) {
+            ctx.fillStyle = 'rgba(255,255,255,0.04)';
+            ctx.fillRect(PADDING, y - 30, W - PADDING*2, ITEM_H - 4);
+          }
+          // Dot leader
+          ctx.fillStyle = 'rgba(201,168,76,0.3)';
+          ctx.font = '20px monospace';
+          ctx.textAlign = 'center';
+          const dots = '·'.repeat(38);
+          ctx.fillText(dots, W/2, y);
+
+          // Item name
+          ctx.fillStyle = 'rgba(255,255,255,0.9)';
+          ctx.font = '28px Georgia, serif';
+          ctx.textAlign = 'left';
+          ctx.fillText(item.name, PADDING + 10, y);
+
+          // Price
+          const priceStr = item.price > 0 ? '₦' + Number(item.price).toLocaleString() : 'On Request';
+          ctx.fillStyle = item.price > 0 ? '#e8c97a' : 'rgba(255,255,255,0.4)';
+          ctx.font = item.price > 0 ? 'bold 28px Georgia, serif' : '24px Georgia, serif';
+          ctx.textAlign = 'right';
+          ctx.fillText(priceStr, W - PADDING - 10, y);
+
+          y += ITEM_H;
+        });
+
+        // Divider between categories
+        if (ci < catKeys.length - 1) {
+          y += 10;
+          ctx.strokeStyle = 'rgba(201,168,76,0.2)';
+          ctx.lineWidth = 1;
+          ctx.setLineDash([6, 6]);
+          ctx.beginPath(); ctx.moveTo(PADDING, y); ctx.lineTo(W - PADDING, y); ctx.stroke();
+          ctx.setLineDash([]);
+          y += 20;
+        }
+      });
+
+      // ---- FOOTER ----
+      y = H - FOOTER_H + 10;
+      ctx.strokeStyle = 'rgba(201,168,76,0.4)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(PADDING, y); ctx.lineTo(W - PADDING, y); ctx.stroke();
+      y += 36;
+
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.font = '24px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('📱 Order via WhatsApp: +234 806 702 3509', W/2, y);
+      y += 34;
+      ctx.fillStyle = 'rgba(201,168,76,0.6)';
+      ctx.font = '22px Georgia, serif';
+      ctx.fillText('Free delivery within Kano State  ·  Nationwide & International delivery available', W/2, y);
+
+      // Show download
+      const wrap = document.getElementById('menuPreviewWrap');
+      wrap.style.display = 'block';
+      const dlBtn = document.getElementById('downloadMenuBtn');
+      dlBtn.style.display = 'inline-block';
+      dlBtn.href = canvas.toDataURL('image/png');
+      dlBtn.download = 'beauty-by-zee-menu.png';
+      showMsg(true, 'Menu generated! Download or tap & hold on mobile to save.');
+    };
+
+    logoImg.onload = () => {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(W/2, 85, 52, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(logoImg, W/2 - 52, 85 - 52, 104, 104);
+      ctx.restore();
+      drawText();
+    };
+    logoImg.onerror = () => {
+      // Draw text fallback for logo
+      ctx.fillStyle = '#c9a84c';
+      ctx.font = 'bold 36px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('BBZ', W/2, 95);
+      drawText();
+    };
+    // Trigger immediately in case image is cached
+    if (logoImg.complete) logoImg.onload();
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
 </script>
 </body>
 </html>

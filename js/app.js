@@ -202,6 +202,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (e.changedTouches[0].clientX - startX > 70) closeCart();
   }, { passive: true });
 
+  // ===== CARD / BANK TRANSFER (coming soon) =====
+  document.getElementById('cardBtn')?.addEventListener('click', () => {
+    const modal = document.getElementById('comingSoonModal');
+    if (modal) modal.style.display = 'flex';
+  });
+
   // ===== WHATSAPP CHECKOUT =====
   document.getElementById('whatsappBtn')?.addEventListener('click', () => {
     if (cart.length === 0) { showToast('⚠️ Your cart is empty!'); return; }
