@@ -5,11 +5,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   let products = [];
 
   async function initProducts() {
-    // Load prices from Supabase if configured, else localStorage
-    const prices = await SupabaseManager.loadPrices();
-    products = DEFAULT_PRODUCTS.map(p => ({
+    const [prices, customProducts] = await Promise.all([
+      SupabaseManager.loadPrices(),
+      SupabaseManager.loadCustomProducts()
+    ]);
+    // Merge default + custom products
+    const allProducts = [...DEFAULT_PRODUCTS, ...customProducts];
+    products = allProducts.map(p => ({
       ...p,
-      price: prices[p.id] !== undefined ? parseFloat(prices[p.id]) : 0
+      price: prices[p.id] !== undefined ? parseFloat(prices[p.id]) : (p.price || 0)
     }));
     renderProducts('All');
     document.dispatchEvent(new CustomEvent('productsRendered'));
