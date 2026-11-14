@@ -2,8 +2,8 @@
 // Free alternative to Supabase — no project limits
 // Setup: https://jsonbin.io → Sign up free → Create Bin → paste IDs below
 
-const JSONBIN_BIN_ID  = '';   // e.g. '6748abc123def456789'
-const JSONBIN_API_KEY = '';   // e.g. '$2a$10$...'
+const JSONBIN_BIN_ID  = '6af8a1dcffd5d16053c17c7c';   
+const JSONBIN_API_KEY = '$2a$10$qR7YKI5q6wBSQntH6NzQkuK05m/AwYgrhaqAtt3JtkJgmLlJsbqRu';   
 
 // =====================================================
 
