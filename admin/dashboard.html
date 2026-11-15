@@ -341,7 +341,8 @@
 
   // ===== ALL PRODUCTS GRID =====
   function allProducts() {
-    const defaults = DEFAULT_PRODUCTS.filter(p => !deletedDefaults.includes(p.id));
+    const overrideIds = new Set(customProducts.filter(p => p._overridesDefault).map(p => p.id));
+    const defaults = DEFAULT_PRODUCTS.filter(p => !deletedDefaults.includes(p.id) && !overrideIds.has(p.id));
     return [...defaults, ...customProducts];
   }
 
